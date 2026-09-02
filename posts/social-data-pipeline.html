@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Building a Multi-source Social Data Pipeline — Carlos Eduardo</title>
+  <meta name="description" content="A practical architecture for multi-source social data collection, normalization, lineage, and reproducible analysis.">
+  <meta property="og:title" content="Building a Multi-source Social Data Pipeline"><meta property="og:description" content="A practical architecture for collection, normalization, lineage, and reproducible analysis."><meta property="og:type" content="article">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header"><div class="container nav-wrap"><a class="wordmark" href="../index.html">Carlos Eduardo<span>/notes</span></a><nav aria-label="Primary navigation"><a href="../index.html#writing">Writing</a><a href="../index.html#projects">Projects</a><a href="../index.html#about">About</a></nav></div></header>
+  <main>
+    <header class="article-header"><div class="container"><a class="back" href="../index.html">← Back to all notes</a><p class="kicker">Data Engineering · Architecture</p><h1>Building a multi-source social data pipeline without losing traceability</h1><p class="article-deck">A practical way to separate collection, normalization, and analytics while keeping every transformation understandable and reproducible.</p><div class="article-meta"><span>Engineering note</span><span>8 min read</span><span>Carlos Eduardo</span></div></div></header>
+    <div class="article-layout container">
+      <article class="article-body">
+        <p>Collecting data from one platform is an integration task. Collecting comparable data from seven platforms is a modeling problem. Each source arrives with its own identifiers, timestamps, nesting rules, rate limits, and definitions of a “post” or “comment.” If those differences are flattened too early, useful context disappears. If they are never reconciled, analysis becomes a collection of special cases.</p>
+        <p>In the Social Data Pipeline project, I use a layered architecture to preserve both realities: the original source and a consistent analytical view. The goal is not only to move data. It is to make later results traceable back to what was collected, how it was transformed, and which version of the pipeline produced it.</p>
+        <h2>Three layers, three responsibilities</h2>
+        <p>The pipeline separates storage by responsibility. MongoDB acts as a raw lake for source-shaped documents. PostgreSQL holds normalized and validated entities. DuckDB provides an analytical warehouse organized for aggregation and exploration.</p>
+        <ul><li><strong>Raw layer:</strong> retain the source payload with minimal transformation and enough metadata to replay normalization.</li><li><strong>Normalized layer:</strong> represent shared concepts such as platforms, authors, posts, comments, and collection runs through explicit relationships.</li><li><strong>Analytical layer:</strong> reshape trusted records into facts and dimensions for fast, understandable queries.</li></ul>
+        <blockquote>Raw data protects evidence. Normalized data protects meaning. Analytical data protects usability.</blockquote>
+        <p>This separation also creates a useful failure boundary. A temporary issue in a downstream model does not require another collection run. A change to the analytical schema does not modify the original documents. Each layer can evolve while its inputs remain inspectable.</p>
+        <h2>Designing for heterogeneous sources</h2>
+        <p>Connectors run independently and produce a small, predictable contract. Platform-specific logic stays close to the connector: pagination, nested replies, source identifiers, and timestamp parsing. Shared validation and persistence happen after that boundary.</p>
+        <p>Deduplication should rely on native identifiers whenever they are trustworthy. In this project, overlapping Reddit inputs can be reconciled by their platform IDs before normalized persistence. This is safer than comparing text, which can change through editing, formatting, or preprocessing.</p>
+        <h3>Language as a data constraint</h3>
+        <p>The normalized scope is Portuguese-language content. Instead of treating this only as a query filter, the final relational layer makes the language expectation explicit. That turns a research decision into an enforceable data contract and prevents future ingestion changes from silently broadening the dataset.</p>
+        <h2>Reproducibility is an operational feature</h2>
+        <p>A reproducible pipeline records more than rows. Collection runs, source names, timestamps, configuration, and transformation versions are part of the result. Logs should answer three questions quickly: what ran, what changed, and what failed.</p>
+        <p>Idempotent writes are equally important. A rerun should update or skip known records according to a documented rule, not create a second interpretation of the same source event. This makes recovery routine and reduces the temptation to repair datasets manually.</p>
+        <h2>What this architecture enables</h2>
+        <p>Once the data layers are stable, downstream systems become simpler. A local LLM classifier can read normalized text without knowing the details of every scraper. An NLI stage can focus on its hypotheses. A Streamlit dashboard can query consistent views rather than reproduce transformation logic.</p>
+        <p>The broader lesson is that data architecture shapes the quality of AI evaluation. Traceable inputs make model errors explainable, comparisons repeatable, and results easier to communicate. The pipeline is therefore not a preliminary step around the model — it is part of the model’s evidence.</p>
+        <nav class="article-nav" aria-label="Article navigation"><a href="../index.html">← All notes</a><a href="local-llm-evaluation.html">Next: Local LLM evaluation →</a></nav>
+      </article>
+      <aside class="article-aside"><p class="label">Related project</p><p>Explore the public implementation, architecture, and setup notes on GitHub.</p><a href="https://github.com/carlosanjoss/social_data_pipeline" target="_blank" rel="noreferrer">Social Data Pipeline ↗</a></aside>
+    </div>
+  </main>
+  <footer class="container"><p>© 2026 Carlos Eduardo.</p><a href="../index.html">Home</a></footer>
+</body>
+</html>
