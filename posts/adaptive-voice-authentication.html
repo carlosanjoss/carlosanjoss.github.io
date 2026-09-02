@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adaptive Thresholds for Voice Authentication — Carlos Eduardo</title>
+  <meta name="description" content="How normalized voice embeddings, personalized centroids, and inter-user separation support adaptive speaker authentication.">
+  <meta property="og:title" content="Adaptive Thresholds for Voice Authentication"><meta property="og:description" content="Normalized embeddings, personalized centroids, and inter-user separation for speaker authentication."><meta property="og:type" content="article">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header"><div class="container nav-wrap"><a class="wordmark" href="../index.html">Carlos Eduardo<span>/notes</span></a><nav aria-label="Primary navigation"><a href="../index.html#writing">Writing</a><a href="../index.html#projects">Projects</a><a href="../index.html#about">About</a></nav></div></header>
+  <main>
+    <header class="article-header"><div class="container"><a class="back" href="../index.html">← Back to all notes</a><p class="kicker">Embeddings · Biometrics</p><h1>Adaptive thresholds for voice authentication</h1><p class="article-deck">A speaker is not one vector, and authentication is not one similarity score. A stronger system models variation, uncertainty, and separation from other users.</p><div class="article-meta"><span>Technical note</span><span>6 min read</span><span>Carlos Eduardo</span></div></div></header>
+    <div class="article-layout container">
+      <article class="article-body">
+        <p>Voice authentication starts with a useful abstraction: map an audio sample to a high-dimensional embedding. Similar voices should land near one another, and different speakers should be separated. The difficulty is turning that geometry into a dependable decision.</p>
+        <p>In Voice-ID, a pretrained speaker encoder maps each sample into a 256-dimensional vector. Every embedding is L2-normalized, placing it on the unit hypersphere. That makes cosine similarity a natural comparison: for normalized vectors, it is simply their dot product.</p>
+        <h2>Model a user as a distribution</h2>
+        <p>A single enrollment sample cannot represent microphone changes, speaking pace, background noise, or natural variation. The system stores multiple embeddings per user and summarizes them with a normalized centroid.</p>
+        <p>The similarities between enrollment samples and that centroid reveal how compact the user’s cluster is. Their mean and standard deviation provide a simple statistical description of within-user consistency.</p>
+        <h2>Personalize the acceptance boundary</h2>
+        <p>A global threshold assumes that every speaker has the same variability and recording conditions. An adaptive threshold instead uses the user’s own similarity distribution. In simplified form, the boundary can be expressed as <code>T = μ − kσ</code>, then constrained by sensible minimum and maximum values.</p>
+        <ul><li>A compact cluster supports a stricter boundary.</li><li>A more variable cluster receives limited tolerance.</li><li>Bounds prevent a noisy enrollment set from making the system arbitrarily permissive.</li></ul>
+        <blockquote>The threshold should describe the enrolled speaker, not only the average behavior of the model.</blockquote>
+        <h2>Similarity is necessary, separation is stronger</h2>
+        <p>Passing one user’s threshold is not enough when another user scores almost as highly. Voice-ID also considers the gap between the best and second-best candidates. The winning similarity must clear its personalized threshold and exceed competing identities by a minimum margin.</p>
+        <p>This multi-user rule turns authentication into a relative decision. It asks both “does this sample resemble the claimed user?” and “is that resemblance meaningfully stronger than the alternatives?”</p>
+        <h2>Adapt carefully after successful authentication</h2>
+        <p>A successful sample can help the model follow gradual changes in voice or recording conditions. But unrestricted updates risk drift. Incremental centroid refinement should therefore happen only after a confident decision and remain observable through authentication logs.</p>
+        <p>Operational records are essential for tuning. Similarities, thresholds, margins, accepted identities, and rejection reasons make false accepts and false rejects diagnosable. Without those traces, threshold adjustment becomes guesswork.</p>
+        <h2>The wider lesson for embedding systems</h2>
+        <p>The same pattern appears in many retrieval and recognition systems: normalize the representation, model each entity with multiple observations, estimate its variability, and compare the leading candidate against alternatives. The embedding creates the space; the decision policy makes that space useful.</p>
+        <p>Voice-ID is an exploration of that boundary between representation learning and statistical decision-making — where a vector becomes an identity claim only after it passes a transparent, adaptive rule.</p>
+        <nav class="article-nav" aria-label="Article navigation"><a href="local-llm-evaluation.html">← Local LLM evaluation</a><a href="../index.html">All notes →</a></nav>
+      </article>
+      <aside class="article-aside"><p class="label">Related project</p><p>Explore the embedding model, adaptive threshold logic, and system architecture.</p><a href="https://github.com/carlosanjoss/voice-id" target="_blank" rel="noreferrer">Voice-ID ↗</a></aside>
+    </div>
+  </main>
+  <footer class="container"><p>© 2026 Carlos Eduardo.</p><a href="../index.html">Home</a></footer>
+</body>
+</html>
