@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Evaluating Local LLMs Beyond Accuracy — Carlos Eduardo</title>
+  <meta name="description" content="A layered approach to structured local LLM inference, metrics, error analysis, NLI, and reproducible evaluation.">
+  <meta property="og:title" content="Evaluating Local LLMs Beyond Accuracy"><meta property="og:description" content="Structured inference, metrics, error analysis, NLI, and reproducible evaluation."><meta property="og:type" content="article">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header"><div class="container nav-wrap"><a class="wordmark" href="../index.html">Carlos Eduardo<span>/notes</span></a><nav aria-label="Primary navigation"><a href="../index.html#writing">Writing</a><a href="../index.html#projects">Projects</a><a href="../index.html#about">About</a></nav></div></header>
+  <main>
+    <header class="article-header"><div class="container"><a class="back" href="../index.html">← Back to all notes</a><p class="kicker">LLM Evaluation · NLP</p><h1>Evaluating local LLMs beyond a single accuracy score</h1><p class="article-deck">Reliable evaluation starts before the metric: with structured outputs, explicit failure states, versioned prompts, and evidence that survives every experiment.</p><div class="article-meta"><span>Research note</span><span>7 min read</span><span>Carlos Eduardo</span></div></div></header>
+    <div class="article-layout container">
+      <article class="article-body">
+        <p>A local language model can return an answer that looks plausible while still being impossible to evaluate consistently. Free-form responses hide ambiguity in formatting, skipped fields, contradictory labels, and silent failures. Before comparing models, I first make the inference process measurable.</p>
+        <p>In the Gemma Hate Inference project, the model produces structured decisions for Portuguese-language content. The pipeline separates the binary decision from the detailed category stage and validates the result before persistence. Invalid JSON, inconsistent fields, and server errors remain errors; they are not quietly converted into negative predictions.</p>
+        <h2>Start with a strict output contract</h2>
+        <p>A compact schema reduces the number of ways a response can be “almost correct.” The first stage answers a narrow question and records its confidence. Only positive candidates enter the detailed stage, which adds categories, target, textual evidence, and a short justification.</p>
+        <p>This structure has two benefits. It makes the model’s behavior easier to parse, and it makes disagreement easier to inspect. A derived label should come from one authoritative decision rather than asking the model to repeat the same answer in multiple fields.</p>
+        <blockquote>An evaluation dataset should include model failures as first-class outcomes, not hide them inside the negative class.</blockquote>
+        <h2>Store the evidence of every run</h2>
+        <p>A prediction without context is difficult to reproduce. For each analyzed item, the pipeline records the model, prompt version, analyzed text, content hash, raw response, attempt count, timing, and status. That evidence allows two experiments to be compared without relying on memory or notebook state.</p>
+        <p>Versioned prompts matter because wording is part of the model configuration. Changing a definition, example, or output instruction can shift the distribution even when the model weights stay the same.</p>
+        <h2>Use a metric set, not a headline number</h2>
+        <p>Accuracy can be useful, but it rarely explains the cost of errors. I monitor precision, recall, F1-score, specificity, and accuracy, then connect those measures to a confusion matrix and sample-level error analysis.</p>
+        <ul><li><strong>Precision</strong> reveals how often flagged content is correct.</li><li><strong>Recall</strong> shows how much relevant content the system finds.</li><li><strong>Specificity</strong> measures how reliably it leaves negative examples alone.</li><li><strong>F1-score</strong> summarizes the precision-recall balance but does not replace inspecting each side.</li></ul>
+        <p>The right operating point depends on the use case. A research dashboard, a moderation queue, and an automated decision each assign different costs to false positives and false negatives.</p>
+        <h2>Add a second reasoning layer</h2>
+        <p>NLI provides another way to test semantic hypotheses after the initial classifier. In the NLI Radar project, separate layers evaluate intensity and discourse dimensions, persist hypothesis scores, and link results back to the exact upstream classification that released the content for analysis.</p>
+        <p>This does not make the system automatically correct. It makes the reasoning path more observable. When layers disagree, the disagreement becomes a candidate for analysis rather than an invisible averaging effect.</p>
+        <h2>The practical evaluation loop</h2>
+        <p>A useful loop is simple: freeze the dataset, version the configuration, run inference, calculate metrics, inspect errors, revise one variable, and rerun. The discipline comes from changing one thing at a time and preserving enough metadata to explain the difference.</p>
+        <p>Local LLM evaluation is therefore both a modeling task and an engineering task. Strong metrics begin with dependable data contracts, explicit error semantics, and a traceable experiment history.</p>
+        <nav class="article-nav" aria-label="Article navigation"><a href="social-data-pipeline.html">← Data pipeline</a><a href="adaptive-voice-authentication.html">Next: Voice authentication →</a></nav>
+      </article>
+      <aside class="article-aside"><p class="label">Related projects</p><p>See the structured local inference and NLI evaluation implementations.</p><a href="https://github.com/carlosanjoss/gema_hate" target="_blank" rel="noreferrer">Gemma Hate Inference ↗</a><br><a href="https://github.com/carlosanjoss/nli_radar" target="_blank" rel="noreferrer">NLI Radar ↗</a></aside>
+    </div>
+  </main>
+  <footer class="container"><p>© 2026 Carlos Eduardo.</p><a href="../index.html">Home</a></footer>
+</body>
+</html>
